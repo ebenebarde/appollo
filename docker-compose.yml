@@ -1,4 +1,4 @@
-version: '3.8'
+# version: '3.8'
 
 services:
   # 1. Datenbank (Update auf Version 17)
@@ -27,6 +27,8 @@ services:
       - "8000:8000"
     depends_on:
       - db
+    env_file:
+      - .env
     environment:
       - ALLOWED_HOSTS=localhost,127.0.0.1,backend
 

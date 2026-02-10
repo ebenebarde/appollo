@@ -6,11 +6,14 @@ env = environ.Env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-environ.Env.read_env(os.path.join(BASE_DIR.parent, '.env'))
+env_file = os.path.join(BASE_DIR.parent, '.env')
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
+else:
+    # Fallback: Falls die Datei nicht gefunden wird (typisch für Docker),
+    # versuchen wir die Variablen direkt aus dem OS-Environment zu lesen.
+    pass
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-fallback-key')
@@ -34,6 +37,11 @@ INSTALLED_APPS = [
     # third-party apps
     'rest_framework',
     'corsheaders',
+
+    # own apps
+    'accounts',
+    'catalogue',
+    'reviews',
 ]
 
 MIDDLEWARE = [
@@ -75,8 +83,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3')
+    'default': env.db('DATABASE_URL')
 }
+
+
+# User model
+AUTH_USER_MODEL = 'accounts.User'
 
 
 # Password validation
