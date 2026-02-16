@@ -10,6 +10,7 @@ urlpatterns = [
     # Wir kapseln die catalogue-URLs unter 'api/v1/'.
     # Das macht die API zukunftssicher.
     path('api/v1/', include('catalogue.urls')),
+    path('api/v1/', include('reviews.urls')),
 
     # Authentifizierungs-URLs (Login/Logout für die Browsable API)
     # Nützlich für Entwickler, um sich im Browser einzuloggen.

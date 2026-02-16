@@ -24,7 +24,7 @@ class Review(models.Model):
             MaxValueValidator(Decimal('10.0')),
             validate_rating_step
         ],
-        null=True, blank=True 
+        null=True, blank=True
     )
     
     text_content = models.TextField(max_length=2000, blank=True)
@@ -33,6 +33,7 @@ class Review(models.Model):
 
     class Meta:
         unique_together = ('user', 'track')
+        ordering = ['-created_at']
 
     def clean(self):
         if self.rating is None and not self.text_content:
@@ -44,31 +45,3 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Review by {self.user.username} for {self.track.title}"
-    
-    
-@receiver([post_save, post_delete], sender=Review)
-def update_track_rating(sender, instance, **kwargs):
-    """
-    Wird ausgeführt, sobald ein Review gespeichert oder gelöscht wird.
-    Berechnet den Durchschnitt aller Reviews für den betroffenen Track neu.
-    """
-    track = instance.track
-    reviews = track.reviews.all()
-    
-    if reviews.exists():
-
-        aggregates = reviews.aggregate(
-            average_rating=Avg('rating'),
-            count=models.Count('id')
-        )
-        new_average = aggregates['average_rating']
-        new_count = aggregates['count']
-        
-        track.average_rating = round(new_average, 1) if new_average is not None else 0.0
-        track.review_count = new_count if new_count is not None else 0
-    else:
-        # Keine Reviews mehr vorhanden
-        track.average_rating = 0.0 
-        track.review_count = 0
-        
-    track.save(update_fields=['average_rating', 'review_count'])
