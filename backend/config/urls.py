@@ -11,6 +11,7 @@ urlpatterns = [
     # Das macht die API zukunftssicher.
     path('api/v1/', include('catalogue.urls')),
     path('api/v1/', include('reviews.urls')),
+    path('api/v1/auth/', include('accounts.urls')),
 
     # Authentifizierungs-URLs (Login/Logout für die Browsable API)
     # Nützlich für Entwickler, um sich im Browser einzuloggen.

@@ -12,5 +12,4 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # Schreibrechte nur für den Besitzer des Objekts (obj.user)
-        # Wir gehen davon aus, dass das Model ein 'user' Feld hat.
         return obj.user == request.user
