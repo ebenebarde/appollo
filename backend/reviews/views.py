@@ -5,7 +5,9 @@ from .permissions import IsOwnerOrReadOnly
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """
-    API Endpoint für Reviews.
+    API endpoint for reviews.
+    Allows: GET /reviews/ (list), POST /reviews/ (create), GET /reviews/{id}/ (detail),
+    PUT/PATCH /reviews/{id}/ (update), DELETE /reviews/{id}/ (delete).
     """
     serializer_class = ReviewSerializer
     permission_classes = [
@@ -14,5 +16,4 @@ class ReviewViewSet(viewsets.ModelViewSet):
     ]
 
     def get_queryset(self):
-        # Performance: select_related verhindert N+1 Problem
         return Review.objects.select_related('user', 'track').order_by('-created_at')

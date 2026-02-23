@@ -4,26 +4,20 @@ import environ
 
 env = environ.Env()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 env_file = os.path.join(BASE_DIR.parent, '.env')
 
 if os.path.exists(env_file):
     environ.Env.read_env(env_file)
 else:
-    # Fallback: Falls die Datei nicht gefunden wird (typisch für Docker),
-    # versuchen wir die Variablen direkt aus dem OS-Environment zu lesen.
     pass
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-fallback-key')
 DEBUG = env.bool('DEBUG', default=False)
 
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
-
-# Application definition
 
 INSTALLED_APPS = [
     # default apps
@@ -134,5 +128,29 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://127.0.0.1:5173"
 ])
 
-# Falls du Cookies/Auth über Domain-Grenzen hinweg brauchst (später wichtig):
 CORS_ALLOW_CREDENTIALS = True
+
+
+# Django REST Framework & JWT Settings
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ),
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+}

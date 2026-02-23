@@ -5,7 +5,6 @@ from rest_framework_simplejwt.views import (
 )
 from .views import UserViewSet
 
-# Binding the ViewSet explicitely to the 'create' action for the register endpoint
 register_view = UserViewSet.as_view({'post': 'create'})
 
 urlpatterns = [

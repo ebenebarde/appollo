@@ -36,8 +36,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'email', 'password', 'password_confirm')
-        # Email is required in our custom model (blank=False), so DRF should enforce it.
-        # We make it explicit here to be safe.
         extra_kwargs = {
             'email': {'required': True}
         }

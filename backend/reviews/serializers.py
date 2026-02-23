@@ -7,8 +7,8 @@ from accounts.models import User
 
 class ReviewUserSerializer(serializers.ModelSerializer):
     """
-    Minimalistische Darstellung des Users für öffentliche Reviews.
-    Wir wollen nicht das Passwort oder die E-Mail leaken!
+    Minimalistic representation of the User for public reviews.
+    We don't want to leak sensitive information here.
     """
     class Meta:
         model = User
@@ -18,7 +18,8 @@ class ReviewUserSerializer(serializers.ModelSerializer):
 
 class ReviewTrackSerializer(serializers.ModelSerializer):
     """
-    Minimalistische Darstellung des Tracks.
+    Minimialistic representation of the Track for public reviews.
+    We don't want to leak the full album or artist details here.
     """
     class Meta:
         model = Track
@@ -30,17 +31,13 @@ class ReviewTrackSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     """
-    Der Haupt-Serializer.
-    Update zur Architektur: Wir nutzen HiddenField(CurrentUserDefault()),
-    damit die Validierung (UniqueTogether) autark im Serializer funktioniert
-    und nicht von Logik in der View abhängt.
+    The main serializer.
+    We use HiddenField(CurrentUserDefault()) so that the validation (UniqueTogether) 
+    works independently within the serializer and does not rely on logic in the view.
     """
     
-    # HiddenField: Der User wird automatisch aus dem Request Kontext (request.user) geholt.
-    # Er ist Teil der validated_data, taucht aber nicht im API-Input Formular auf.
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     
-    # Input: ID des Tracks
     track = serializers.PrimaryKeyRelatedField(queryset=Track.objects.all())
 
     class Meta:
@@ -56,7 +53,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['created_at', 'updated_at']
         
-        # Hier greift jetzt die Validierung korrekt, da 'user' in den Daten vorhanden ist.
         validators = [
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
@@ -67,12 +63,11 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """
-        Für die Ausgabe überschreiben wir die Darstellung.
-        Statt nichts (HiddenField) oder nur der ID, zeigen wir die User-Details.
+        Overriding the representation for output.
+        Instead of showing nothing (HiddenField) or just the ID, we display user details.
         """
         response = super().to_representation(instance)
         
-        # Manuelles Nesting für die Ausgabe
         response['user'] = ReviewUserSerializer(instance.user).data
         response['track'] = ReviewTrackSerializer(instance.track).data
         

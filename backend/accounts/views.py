@@ -16,7 +16,6 @@ class UserViewSet(mixins.CreateModelMixin,
     - Retrieve Profile (GET /api/v1/auth/users/{id}/) -> UserSerializer
     """
     queryset = User.objects.all()
-    # We remove 'serializer_class' attribute because we override get_serializer_class()
     
     def get_permissions(self):
         """
@@ -27,7 +26,7 @@ class UserViewSet(mixins.CreateModelMixin,
         if self.action == 'create':
             permission_classes = [AllowAny]
         else:
-            permission_classes = [IsAuthenticated] # Example: Profile needs login
+            permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):

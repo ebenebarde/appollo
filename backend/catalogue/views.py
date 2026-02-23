@@ -10,51 +10,47 @@ from .serializers import (
 
 class ArtistViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API-Endpoint für Künstler.
-    Erlaubt: GET /artists/ (Liste) und GET /artists/{slug}/ (Detail).
+    API endpoint for artists.
+    Allows: GET /artists/ (list) and GET /artists/{slug}/ (detail).
     """
     queryset = Artist.objects.all()
     serializer_class = ArtistSerializer
-    permission_classes = [AllowAny] # Öffentlich zugänglich
-    lookup_field = 'slug'           # Wir nutzen Slugs statt IDs in der URL
+    permission_classes = [AllowAny]
+    lookup_field = 'slug'           
 
 
 class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API-Endpoint für Alben.
-    Erlaubt: GET /albums/ (Liste) und GET /albums/{slug}/ (Detail).
+    API endpoint for albums.
+    Allows: GET /albums/ (list) and GET /albums/{slug}/ (detail).
     """
     permission_classes = [AllowAny]
     lookup_field = 'slug'
 
     def get_queryset(self):
         """
-        Optimierte Datenbank-Abfragen zur Vermeidung des N+1 Problems.
+        Optimized database queries to avoid the N+1 problem.
         """
         queryset = Album.objects.all()
 
         if self.action == 'retrieve':
-            # Detailansicht: Wir brauchen Tracks und Artist.
-            # 'select_related' für den Artist (ForeignKey)
-            # 'prefetch_related' für die Tracks (Reverse ForeignKey / One-to-Many)
             return queryset.select_related('artist').prefetch_related('tracks')
         
-        # Listenansicht: Wir brauchen nur den Artist (für den Namen im Serializer)
         return queryset.select_related('artist')
 
     def get_serializer_class(self):
         """
-        Wählt dynamisch den richtigen Serializer basierend auf der Aktion.
+        Handle different serializers for list vs. detail views.
         """
         if self.action == 'retrieve':
-            return AlbumDetailSerializer  # Enthält Trackliste & Description
-        return AlbumListSerializer        # Schlanke Version für Listen
+            return AlbumDetailSerializer 
+        return AlbumListSerializer
 
 
 class TrackViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API-Endpoint für einzelne Tracks.
-    Erlaubt: GET /tracks/{slug}/
+    API endpoint for individual tracks.
+    Allows: GET /tracks/{slug}/
     """
     queryset = Track.objects.select_related('album__artist').all()
     serializer_class = TrackSerializer

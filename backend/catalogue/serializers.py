@@ -3,9 +3,7 @@ from .models import Artist, Album, Track
 
 
 class ArtistSerializer(serializers.ModelSerializer):
-    """
-    Wandelt Artist-Modelle in JSON um.
-    """
+    
     class Meta:
         model = Artist
         fields = ['id', 'name', 'slug', 'bio']
@@ -13,8 +11,8 @@ class ArtistSerializer(serializers.ModelSerializer):
 
 class AlbumListSerializer(serializers.ModelSerializer):
     """
-    Leichtere Version für Listenansichten (z.B. "Alle Alben").
-    Hier laden wir NICHT alle Tracks, um die Performance zu schonen.
+    Lightweight version for list views (e.g., "All Albums").
+    Here we do NOT load all tracks to preserve performance.
     """
     artist = serializers.StringRelatedField() 
 
@@ -25,9 +23,8 @@ class AlbumListSerializer(serializers.ModelSerializer):
 
 class AlbumTrackSerializer(serializers.ModelSerializer):
     """
-    NEU: Eine schlanke Version des Tracks OHNE Album-Daten.
-    Wird NUR innerhalb von AlbumDetailSerializer verwendet, 
-    um Redundanz zu vermeiden.
+    A lightweight version of the Track WITHOUT album data.
+    Used ONLY within AlbumDetailSerializer to avoid redundancy.
     """
     class Meta:
         model = Track
@@ -55,8 +52,8 @@ class TrackSerializer(serializers.ModelSerializer):
 
 class AlbumDetailSerializer(serializers.ModelSerializer):
     """
-    Detaillierte Version für die Einzelansicht eines Albums.
-    Hier inkludieren wir die Tracks (Nested Serializer).
+    Detailed version for the detailed view of an album.
+    Here we include the tracks (Nested Serializer).
     """
     artist = ArtistSerializer(read_only=True)
     tracks = AlbumTrackSerializer(many=True, read_only=True)
@@ -70,5 +67,5 @@ class AlbumDetailSerializer(serializers.ModelSerializer):
             'artist', 
             'release_date',
             'genre',
-            'tracks',   # Das hier ist das Feld, das durch Zeile 61 gefüllt wird
+            'tracks',  
         ]
