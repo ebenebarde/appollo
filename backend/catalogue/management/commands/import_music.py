@@ -12,8 +12,8 @@ class Command(BaseCommand):
         """
         Authenticates with Spotify API using Client Credentials flow.
         """
-        client_id = '1cf01ad9c11246298cbe506bd83b02a8'
-        client_secret = '403d8ca7a956459db683f6c62d7f5a75'
+        client_id = os.environ.get('SPOTIFY_CLIENT_ID')
+        client_secret = os.environ.get('SPOTIFY_CLIENT_SECRET')
 
         if not client_id or not client_secret:
             self.stdout.write(self.style.ERROR('Spotify credentials missing in environment variables.'))
