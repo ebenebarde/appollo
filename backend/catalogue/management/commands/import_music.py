@@ -27,7 +27,7 @@ class Command(BaseCommand):
                 'client_secret': client_secret,
             }, timeout=5)
             response.raise_for_status()
-            return response.json().get('access_token')
+            return response.json()['access_token']
         except requests.exceptions.RequestException as e:
             self.stdout.write(self.style.ERROR(f'Failed to get Spotify token: {e}'))
             return None
@@ -40,7 +40,15 @@ class Command(BaseCommand):
             return
 
         headers = {
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-origin'
         }
 
         album_ids = [
@@ -56,21 +64,25 @@ class Command(BaseCommand):
             "5JpH5T1sCYnUyZD6TM0QaY", # Cry Baby
         ]
 
-        ids_string = ','.join(album_ids)
-        api_url = f"https://api.spotify.com/v1/albums?ids={ids_string}"
+        for album_id in album_ids:
+            if not album_id:
+                self.stdout.write(self.style.WARNING('Skipping empty album ID.'))
+                continue
 
-        try:
-            response = requests.get(api_url, headers=headers, timeout=10)
-            response.raise_for_status()
-            data = response.json()
+            api_url = f"https://api.spotify.com/v1/albums/{album_id}"
 
-            with transaction.atomic():
-                self.process_albums(data.get('albums', []))
-                
-            self.stdout.write(self.style.SUCCESS('Successfully seeded 10 albums from Spotify!'))
+            try:
+                response = requests.get(api_url, headers=headers, timeout=10)
+                response.raise_for_status()
+                data = response.json()
 
-        except requests.exceptions.RequestException as e:
-            self.stdout.write(self.style.ERROR(f'API Request failed: {e}'))
+                with transaction.atomic():
+                    self.process_albums([data])
+                    
+                self.stdout.write(self.style.SUCCESS('Successfully seeded an album from Spotify!'))
+
+            except requests.exceptions.RequestException as e:
+                self.stdout.write(self.style.ERROR(f'API Request failed: {e}'))
 
     def process_albums(self, albums_data):
         """
@@ -121,3 +133,7 @@ class Command(BaseCommand):
                         'duration': duration_td
                     }
                 )
+
+
+if __name__ == '__main__':
+    Command().handle()
