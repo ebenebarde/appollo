@@ -40,15 +40,7 @@ class Command(BaseCommand):
             return
 
         headers = {
-            'Authorization': f'Bearer {token}',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-origin'
+            'Authorization': f'Bearer {token}'
         }
 
         album_ids = [
@@ -77,63 +69,58 @@ class Command(BaseCommand):
                 data = response.json()
 
                 with transaction.atomic():
-                    self.process_albums([data])
+                    self.process_albums(data)
                     
                 self.stdout.write(self.style.SUCCESS('Successfully seeded an album from Spotify!'))
 
             except requests.exceptions.RequestException as e:
                 self.stdout.write(self.style.ERROR(f'API Request failed: {e}'))
 
-    def process_albums(self, albums_data):
+    def process_albums(self, album_data):
         """
         Maps Spotify JSON responses to our Django models.
         """
-        for album_data in albums_data:
-            if not album_data:
-                continue
+        if not album_data:
+            return
 
-            # 1. Process Artist (using the primary artist)
-            primary_artist_data = album_data['artists'][0]
-            artist, _ = Artist.objects.get_or_create(
-                name=primary_artist_data['name'],
-                defaults={'bio': ''} 
-            )
+        # 1. Process Artist (using the primary artist)
+        primary_artist_data = album_data['artists'][0]
+        artist, _ = Artist.objects.get_or_create(
+            name=primary_artist_data['name'],
+            defaults={'bio': ''} 
+        )
 
-            # 2. Process Album
-            # Handle potentially incomplete release dates (e.g., just '1993' instead of '1993-09-21')
-            release_date_str = album_data.get('release_date')
-            release_date = None
-            if release_date_str:
-                if len(release_date_str) == 4:
-                    release_date = f"{release_date_str}-01-01"
-                elif len(release_date_str) == 7: 
-                    release_date = f"{release_date_str}-01"
-                else:
-                    release_date = release_date_str
+        # 2. Process Album
+        # Handle potentially incomplete release dates (e.g., just '1993' instead of '1993-09-21')
+        release_date_str = album_data.get('release_date')
+        release_date = None
+        if release_date_str:
+            if len(release_date_str) == 4:
+                release_date = f"{release_date_str}-01-01"
+            elif len(release_date_str) == 7: 
+                release_date = f"{release_date_str}-01"
+            else:
+                release_date = release_date_str
 
-            album, _ = Album.objects.get_or_create(
-                artist=artist,
-                title=album_data['name'],
+        album, _ = Album.objects.get_or_create(
+            artist=artist,
+            title=album_data['name'],
+            defaults={
+                'release_date': release_date,
+                'genre': album_data['genres'][0] if album_data.get('genres') else ''
+            }
+        )
+
+        # 3. Process Tracks
+        for track_data in album_data['tracks']['items']:
+            duration_ms = track_data.get('duration_ms', 0)
+            duration_td = datetime.timedelta(milliseconds=duration_ms)
+
+            Track.objects.update_or_create(
+                album=album,
+                position=track_data['track_number'],
                 defaults={
-                    'release_date': release_date,
-                    'genre': album_data['genres'][0] if album_data.get('genres') else ''
+                    'title': track_data['name'],
+                    'duration': duration_td
                 }
             )
-
-            # 3. Process Tracks
-            for track_data in album_data['tracks']['items']:
-                duration_ms = track_data.get('duration_ms', 0)
-                duration_td = datetime.timedelta(milliseconds=duration_ms)
-
-                Track.objects.update_or_create(
-                    album=album,
-                    position=track_data['track_number'],
-                    defaults={
-                        'title': track_data['name'],
-                        'duration': duration_td
-                    }
-                )
-
-
-if __name__ == '__main__':
-    Command().handle()
