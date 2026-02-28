@@ -67,7 +67,7 @@ Für das Django-Admin-Interface und passwortgeschützte API-Bereiche wurde berei
   * api/v1/albums
   * api/v1/albums/{slug}
   * api/v1/tracks
-  * api/v1/tracks/{id}
+  * api/v1/tracks/{slug}
 * **REVIEWS:**
   * api/v1/reviews
   * api/v1/reviews/{id}
