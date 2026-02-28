@@ -17,6 +17,8 @@ class UserViewSet(mixins.CreateModelMixin,
     - Retrieve Profile (GET /api/v1/auth/users/{id}/) -> UserSerializer
     """
     queryset = User.objects.all()
+
+    lookup_field = 'slug'
     
     def get_permissions(self):
         """
