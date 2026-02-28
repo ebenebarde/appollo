@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import RegisterSerializer, UserSerializer
+from .permissions import IsOwner
 
 # Get the custom user model
 User = get_user_model()
@@ -13,9 +14,11 @@ class UserViewSet(mixins.CreateModelMixin,
     ViewSet for User management.
     Handles:
     - Register (POST /api/v1/auth/register/) -> RegisterSerializer
-    - Retrieve Profile (GET /api/v1/auth/users/{id}/) -> UserSerializer
+    - Retrieve Profile (GET /api/v1/auth/users/{slug}/) -> UserSerializer
     """
     queryset = User.objects.all()
+
+    lookup_field = 'slug'
     
     def get_permissions(self):
         """
@@ -25,6 +28,8 @@ class UserViewSet(mixins.CreateModelMixin,
         """
         if self.action == 'create':
             permission_classes = [AllowAny]
+        elif self.action == 'retrieve':
+            permission_classes = [IsAuthenticated, IsOwner]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
