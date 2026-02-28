@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import RegisterSerializer, UserSerializer
+from . permissions import IsOwner
 
 # Get the custom user model
 User = get_user_model()
@@ -25,10 +26,11 @@ class UserViewSet(mixins.CreateModelMixin,
         """
         if self.action == 'create':
             permission_classes = [AllowAny]
+        elif self.action == 'retrieve':
+            permission_classes = [IsAuthenticated, IsOwner]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
-
     def get_serializer_class(self):
         """
         Return different serializers for different actions.
